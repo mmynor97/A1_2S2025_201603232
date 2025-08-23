@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>MediLogic – Paciente</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+  <h2>Diagnóstico preliminar</h2>
+  <form id="form">
+    <fieldset>
+      <legend>Síntomas</legend>
+      <div class="symptom">
+        <label><input type="checkbox" name="sym" value="fiebre"> Fiebre</label>
+        <select name="sev_fiebre">
+          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+        </select>
+      </div>
+      <div class="symptom">
+        <label><input type="checkbox" name="sym" value="tos"> Tos</label>
+        <select name="sev_tos">
+          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+        </select>
+      </div>
+      <div class="symptom">
+        <label><input type="checkbox" name="sym" value="dolor_garganta"> Dolor de garganta</label>
+        <select name="sev_dolor_garganta">
+          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+        </select>
+      </div>
+      <div class="symptom">
+        <label><input type="checkbox" name="sym" value="dolor_cabeza"> Dolor de cabeza</label>
+        <select name="sev_dolor_cabeza">
+          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+        </select>
+      </div>
+      <div class="symptom">
+        <label><input type="checkbox" name="sym" value="fatiga"> Fatiga</label>
+        <select name="sev_fatiga">
+          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <label>Alergias (coma-separado): <input type="text" id="alergias" placeholder="aines, penicilina"></label>
+    <label>Crónicos (coma-separado): <input type="text" id="cronicos" placeholder="hipertension_no_controlada"></label>
+
+    <button type="submit" class="btn">Analizar</button>
+  </form>
+
+  <section id="result"></section>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
