@@ -4,12 +4,207 @@
   <meta charset="utf-8"/>
   <title>MediLogic – Admin</title>
   <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+    textarea{width:100%;min-height:140px}
+    .hidden{display:none}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{border:1px solid #e5e7eb;padding:6px;text-align:left;font-size:14px}
+    .token{font-family:monospace}
+  </style>
 </head>
 <body>
-  <h2>Panel Administrativo (Demo Entrega 1)</h2>
-  <p>Exportar base de conocimiento actual:</p>
-  <a class="btn" href="http://localhost:8080/admin/export" target="_blank">Descargar medi_logic.pl</a>
+  <main class="container">
+    <a class="link" href="index.html">← Volver</a>
+    <h1>Panel Administrativo</h1>
+    <p class="muted">Protegido con token (X-Admin-Token). Por defecto: <span class="token">admin123</span></p>
 
-  <p class="muted">Cargar/editar reglas se implementará en la siguiente entrega.</p>
+    <section class="card">
+      <h2>Autenticación</h2>
+      <div class="row">
+        <label>Token <input id="token" placeholder="admin123"/></label>
+        <button class="btn" id="btnLogin">Usar token</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="kbSection">
+      <h2>Base de conocimiento</h2>
+      <div class="row">
+        <button class="btn" id="btnLoad">Cargar</button>
+        <button class="btn secondary" id="btnSave">Guardar y recargar Prolog</button>
+        <a class="btn ghost" id="btnExport" target="_blank">Exportar .pl</a>
+      </div>
+
+      <h3>Enfermedades</h3>
+      <div class="row">
+        <input id="d_name" placeholder="nombre (p.ej. influenza)">
+        <input id="d_tipo" placeholder="tipo (viral, cronico...)">
+        <input id="d_sistema" placeholder="sistema (respiratorio...)">
+      </div>
+      <div class="row">
+        <input id="d_caracs" placeholder="caracteristicas: sintoma:peso, ... (fiebre:3,tos:2)">
+      </div>
+      <button class="btn small" id="btnAddDisease">Agregar/Actualizar enfermedad</button>
+
+      <h3>Medicamentos</h3>
+      <div class="row">
+        <input id="m_name" placeholder="medicamento (paracetamol)">
+        <input id="m_treats" placeholder="trata: enf1,enf2">
+      </div>
+      <button class="btn small" id="btnAddMed">Agregar/Actualizar medicamento</button>
+
+      <h3>Contraindicaciones</h3>
+      <div class="row">
+        <input id="c_med" placeholder="medicamento">
+        <input id="c_tipo" placeholder="tipo: alergia|cronico">
+        <input id="c_val" placeholder="valor: aines | hipertension_no_controlada">
+      </div>
+      <button class="btn small" id="btnAddContra">Agregar contraindicación</button>
+
+      <h3>Resumen actual</h3>
+      <pre id="kbDump" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e5e7eb;padding:8px;border-radius:8px;max-height:300px;overflow:auto"></pre>
+    </section>
+
+    <section class="card hidden" id="uploadSection">
+      <h2>Subir nuevo .pl</h2>
+      <input type="file" id="plFile" accept=".pl">
+      <button class="btn" id="btnUploadPL">Subir y recargar</button>
+    </section>
+
+    <section class="card hidden" id="rpaSection">
+      <h2>RPA: Cargar enfermedades desde texto</h2>
+      <p>Formato:</p>
+      <pre>---
+Nombre: influenza
+Tipo: viral
+Sistema: respiratorio
+Descripcion: texto libre
+Sintomas: fiebre:3, tos:2, fatiga:2
+Contraindicados: ibuprofeno, oseltamivir
+Trata: paracetamol, oseltamivir
+---</pre>
+      <textarea id="rpaText" placeholder="Pega aquí el texto..."></textarea>
+      <div class="row">
+        <button class="btn" id="btnRPA">Procesar RPA</button>
+      </div>
+      <pre id="rpaOut" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e5e7eb;padding:8px;border-radius:8px"></pre>
+    </section>
+  </main>
+
+  <script>
+    const BASE = "http://localhost:8080";
+    const el = (id)=>document.getElementById(id);
+    let TOKEN = "admin123";
+
+    const showAdmin = () => {
+      el('kbSection').classList.remove('hidden');
+      el('uploadSection').classList.remove('hidden');
+      el('rpaSection').classList.remove('hidden');
+      el('btnExport').href = BASE + "/admin/export?token=" + encodeURIComponent(TOKEN);
+    };
+
+    el('btnLogin').onclick = () => {
+      TOKEN = el('token').value.trim() || "admin123";
+      showAdmin();
+    };
+
+    el('btnLoad').onclick = async () => {
+      const r = await fetch(BASE+"/admin/kb?token="+encodeURIComponent(TOKEN));
+      const kb = await r.json();
+      el('kbDump').textContent = JSON.stringify(kb,null,2);
+    };
+
+    el('btnSave').onclick = async () => {
+      try{
+        const kb = JSON.parse(el('kbDump').textContent || "{}");
+        const r = await fetch(BASE+"/admin/kb?token="+encodeURIComponent(TOKEN), {
+          method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(kb)
+        });
+        if(!r.ok) throw new Error(await r.text());
+        alert("Guardado y recargado ✅");
+      }catch(e){ alert("Error: "+e.message); }
+    };
+
+    el('btnAddDisease').onclick = async () => {
+      const r = await fetch(BASE+"/admin/kb?token="+encodeURIComponent(TOKEN));
+      const kb = await r.json();
+
+      const name = el('d_name').value.trim().toLowerCase();
+      const tipo = el('d_tipo').value.trim().toLowerCase();
+      const sis  = el('d_sistema').value.trim().toLowerCase();
+      const car  = el('d_caracs').value.trim();
+
+      if(!name){ alert("Nombre requerido"); return; }
+
+      const carList = car ? car.split(",").map(s=>s.trim()).filter(Boolean).map(p=>{
+        const [s,w] = p.split(":").map(x=>x.trim());
+        return {symptom:s, peso: Math.max(1, Math.min(3, parseInt(w||"1",10)))};
+      }) : [];
+
+      let found = kb.diseases.find(d=>d.name===name);
+      if(found){
+        found.tipo = tipo; found.sistema = sis; found.caracteristicas = carList;
+      }else{
+        kb.diseases.push({name, tipo, sistema:sis, descripcion:"", caracteristicas:carList});
+      }
+      el('kbDump').textContent = JSON.stringify(kb,null,2);
+      alert("Enfermedad agregada/actualizada (pendiente Guardar)");
+    };
+
+    el('btnAddMed').onclick = async () => {
+      const r = await fetch(BASE+"/admin/kb?token="+encodeURIComponent(TOKEN));
+      const kb = await r.json();
+
+      const name = el('m_name').value.trim().toLowerCase();
+      const treats = (el('m_treats').value.trim()||"").split(",").map(s=>s.trim().toLowerCase()).filter(Boolean);
+      if(!name){ alert("Nombre requerido"); return; }
+
+      let found = kb.meds.find(m=>m.name===name);
+      if(found){
+        treats.forEach(t=>{ if(!found.treats.includes(t)) found.treats.push(t); });
+      }else{
+        kb.meds.push({name, treats});
+      }
+      el('kbDump').textContent = JSON.stringify(kb,null,2);
+      alert("Medicamento agregado/actualizado (pendiente Guardar)");
+    };
+
+    el('btnAddContra').onclick = async () => {
+      const r = await fetch(BASE+"/admin/kb?token="+encodeURIComponent(TOKEN));
+      const kb = await r.json();
+
+      const med  = el('c_med').value.trim().toLowerCase();
+      const tipo = el('c_tipo').value.trim().toLowerCase();
+      const val  = el('c_val').value.trim().toLowerCase();
+      if(!med||!tipo||!val){ alert("Completa los 3 campos"); return; }
+
+      if(tipo==="alergia"){ kb.contraAlergias.push({med, alergia:val}); }
+      else if(tipo==="cronico"){ kb.contraCronicos.push({med, cronico:val}); }
+      else { alert("tipo debe ser alergia|cronico"); return; }
+
+      el('kbDump').textContent = JSON.stringify(kb,null,2);
+      alert("Contraindicación agregada (pendiente Guardar)");
+    };
+
+    el('btnUploadPL').onclick = async () => {
+      const f = el('plFile').files[0];
+      if(!f){ alert("Selecciona un archivo .pl"); return; }
+      const fd = new FormData();
+      fd.append("file", f, f.name);
+      const r = await fetch(BASE+"/admin/upload-pl?token="+encodeURIComponent(TOKEN), {method:"POST", body:fd});
+      if(!r.ok){ alert("Error: "+await r.text()); return; }
+      alert("Subido y recargado ✅");
+    };
+
+    el('btnRPA').onclick = async () => {
+      const text = el('rpaText').value;
+      const r = await fetch(BASE+"/admin/rpa/ingest?token="+encodeURIComponent(TOKEN), {
+        method:"POST", headers:{"Content-Type":"text/plain"}, body:text
+      });
+      const t = await r.text();
+      el('rpaOut').textContent = t;
+      alert("RPA ejecutado. Revisa el informe.");
+    };
+  </script>
 </body>
 </html>

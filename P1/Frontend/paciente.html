@@ -1,55 +1,109 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <title>MediLogic – Paciente</title>
-  <link rel="stylesheet" href="assets/styles.css"/>
+  <meta charset="utf-8" />
+  <title>MediLogic – Diagnóstico preliminar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Estilos básicos opcionales (puedes quitarlos si ya usas styles.css) -->
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;margin:20px;color:#0f172a}
+    h1{font-size:32px;margin:0 0 16px}
+    fieldset{border:1px solid #9ca3af;border-radius:6px;padding:12px 16px;margin-bottom:12px}
+    legend{padding:0 6px}
+    label{font-size:18px}
+    .row{display:flex;align-items:center;gap:8px;margin:10px 0}
+    input[type="text"]{padding:8px;border:1px solid #cbd5e1;border-radius:6px;min-width:300px}
+    .btn{padding:10px 18px;border-radius:10px;border:2px solid #0b5bd3;background:#1e79ff;color:#fff;cursor:pointer}
+    .btn.ghost{background:#f8fafc;color:#0b5bd3;border-color:#cfe0ff}
+    .btn.small{padding:6px 10px}
+    .badge{background:#eef2ff;color:#1e40af;border:1px solid #c7d2fe;border-radius:999px;padding:2px 8px}
+    .muted{color:#64748b}
+    .actions{display:flex;gap:16px;margin-top:10px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;font-size:14px}
+  </style>
 </head>
 <body>
-  <h2>Diagnóstico preliminar</h2>
+  <a class="link" href="index.html">← Volver</a>
+  <h1>Diagnóstico preliminar</h1>
+
   <form id="form">
     <fieldset>
-      <legend>Síntomas</legend>
-      <div class="symptom">
+      <legend><strong>Síntomas</strong></legend>
+
+      <div class="row">
         <label><input type="checkbox" name="sym" value="fiebre"> Fiebre</label>
         <select name="sev_fiebre">
-          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+          <option value="leve">Leve</option>
+          <option value="moderado">Moderado</option>
+          <option value="severo">Severo</option>
         </select>
       </div>
-      <div class="symptom">
+
+      <div class="row">
         <label><input type="checkbox" name="sym" value="tos"> Tos</label>
         <select name="sev_tos">
-          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+          <option value="leve">Leve</option>
+          <option value="moderado">Moderado</option>
+          <option value="severo">Severo</option>
         </select>
       </div>
-      <div class="symptom">
+
+      <div class="row">
         <label><input type="checkbox" name="sym" value="dolor_garganta"> Dolor de garganta</label>
         <select name="sev_dolor_garganta">
-          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+          <option value="leve">Leve</option>
+          <option value="moderado">Moderado</option>
+          <option value="severo">Severo</option>
         </select>
       </div>
-      <div class="symptom">
+
+      <div class="row">
         <label><input type="checkbox" name="sym" value="dolor_cabeza"> Dolor de cabeza</label>
         <select name="sev_dolor_cabeza">
-          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+          <option value="leve">Leve</option>
+          <option value="moderado">Moderado</option>
+          <option value="severo">Severo</option>
         </select>
       </div>
-      <div class="symptom">
+
+      <div class="row">
         <label><input type="checkbox" name="sym" value="fatiga"> Fatiga</label>
         <select name="sev_fatiga">
-          <option value="leve">Leve</option><option value="moderado">Moderado</option><option value="severo">Severo</option>
+          <option value="leve">Leve</option>
+          <option value="moderado">Moderado</option>
+          <option value="severo">Severo</option>
         </select>
       </div>
     </fieldset>
 
-    <label>Alergias (coma-separado): <input type="text" id="alergias" placeholder="aines, penicilina"></label>
-    <label>Crónicos (coma-separado): <input type="text" id="cronicos" placeholder="hipertension_no_controlada"></label>
+    <div class="row">
+      <label>Alergias (coma-separado):</label>
+      <input id="alergias" type="text" placeholder="aines, oseltamivir_alergia" />
+    </div>
 
-    <button type="submit" class="btn">Analizar</button>
+    <div class="row">
+      <label>Crónicos (coma-separado):</label>
+      <input id="cronicos" type="text" placeholder="hipertension_no_controlada" />
+    </div>
+
+    <div class="row">
+      <button class="btn" type="submit">Analizar</button>
+      <button class="btn ghost" id="limpiar" type="button">Limpiar</button>
+    </div>
+
+    <!-- Los botones de “Descargar PDF / Historial / Limpiar historial” los inyecta app.js; 
+         si prefieres ubicación fija, deja este contenedor: -->
+    <div class="actions"></div>
   </form>
 
-  <section id="result"></section>
+  <!-- Aquí aparecerán los resultados (si no existe, app.js lo crea) -->
+  <div id="result" style="margin-top:14px"></div>
 
+  <!-- Configura la URL del backend si usas otro puerto -->
+  <script>
+    window.MEDI_CONFIG = { backendBaseUrl: "http://localhost:8080" };
+  </script>
   <script src="assets/app.js"></script>
 </body>
 </html>

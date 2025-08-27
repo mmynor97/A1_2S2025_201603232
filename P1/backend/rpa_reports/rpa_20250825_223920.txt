@@ -1,0 +1,28 @@
+MediLogic RPA – Informe de carga
+Fecha: 2025-08-25 22:39:20
+
+- Enfermedad: sinusitis (tipo=bacteriano, sistema=respiratorio)
+  Síntomas: dolor_cabeza:2, fatiga:1, fiebre:2
+  Trata: amoxicilina, paracetamol
+  Contraindicados: ibuprofeno
+
+- Enfermedad: gastroenteritis (tipo=viral, sistema=digestivo)
+  Síntomas: diarrea:3, nausea:2, fiebre:1, fatiga:1
+  Trata: rehidratacion_oral, paracetamol
+  Contraindicados: ibuprofeno
+
+- Enfermedad: asma (tipo=cronico, sistema=respiratorio)
+  Síntomas: fatiga:1, tos:2
+  Trata: salbutamol
+  Contraindicados: ibuprofeno
+
+- Enfermedad: faringitis (tipo=bacteriano, sistema=respiratorio)
+  Síntomas: dolor_garganta:3, fiebre:2, tos:1
+  Trata: amoxicilina, paracetamol
+  Contraindicados: ibuprofeno
+
+- Enfermedad: migrana (tipo=neurologico, sistema=nervioso)
+  Síntomas: dolor_cabeza:3, fatiga:1
+  Trata: paracetamol, sumatriptan
+  Contraindicados: ibuprofeno
+

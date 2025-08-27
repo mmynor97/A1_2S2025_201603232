@@ -3,14 +3,20 @@ sintoma(tos).
 sintoma(dolor_garganta).
 sintoma(dolor_cabeza).
 sintoma(fatiga).
+sintoma(diarrea).
+sintoma(nausea).
 
-peso_severidad(leve, 1).
-peso_severidad(moderado, 2).
-peso_severidad(severo, 3).
+peso_severidad(leve,1).
+peso_severidad(moderado,2).
+peso_severidad(severo,3).
 
 enfermedad(resfriado_comun, tipo(viral), sistema(respiratorio)).
 enfermedad(influenza, tipo(viral), sistema(respiratorio)).
-enfermedad(migraña, tipo(neurologico), sistema(nervioso)).
+enfermedad(migrana, tipo(neurologico), sistema(nervioso)).
+enfermedad(sinusitis, tipo(bacteriano), sistema(respiratorio)).
+enfermedad(gastroenteritis, tipo(viral), sistema(digestivo)).
+enfermedad(asma, tipo(cronico), sistema(respiratorio)).
+enfermedad(faringitis, tipo(bacteriano), sistema(respiratorio)).
 
 caracteriza(resfriado_comun, tos, 2).
 caracteriza(resfriado_comun, dolor_garganta, 2).
@@ -18,71 +24,109 @@ caracteriza(resfriado_comun, fiebre, 1).
 caracteriza(influenza, fiebre, 3).
 caracteriza(influenza, tos, 2).
 caracteriza(influenza, fatiga, 2).
-caracteriza(migraña, dolor_cabeza, 3).
-caracteriza(migraña, fatiga, 1).
+caracteriza(migrana, fatiga, 1).
+caracteriza(migrana, dolor_cabeza, 3).
+caracteriza(sinusitis, fiebre, 2).
+caracteriza(sinusitis, dolor_cabeza, 2).
+caracteriza(sinusitis, fatiga, 1).
+caracteriza(gastroenteritis, fiebre, 1).
+caracteriza(gastroenteritis, fatiga, 1).
+caracteriza(gastroenteritis, diarrea, 3).
+caracteriza(gastroenteritis, nausea, 2).
+caracteriza(asma, fatiga, 1).
+caracteriza(asma, tos, 2).
+caracteriza(faringitis, dolor_garganta, 3).
+caracteriza(faringitis, fiebre, 2).
+caracteriza(faringitis, tos, 1).
 
-trata(paracetamol, [resfriado_comun, influenza, migraña]).
-trata(ibuprofeno, [resfriado_comun, migraña]).
+trata(paracetamol, [resfriado_comun, influenza, migrana, sinusitis, gastroenteritis, faringitis]).
+trata(ibuprofeno, [resfriado_comun, migrana]).
 trata(oseltamivir, [influenza]).
 trata(jarabe_dextrometorfano, [resfriado_comun]).
+trata(amoxicilina, [sinusitis, faringitis]).
+trata(rehidratacion_oral, [gastroenteritis]).
+trata(salbutamol, [asma]).
+trata(sumatriptan, [migrana]).
 
 contraindicado_por_alergia(ibuprofeno, aines).
 contraindicado_por_alergia(oseltamivir, oseltamivir_alergia).
-
+contraindicado_por_alergia(ibuprofeno, desconocida).
+contraindicado_por_alergia(ibuprofeno, desconocida).
+contraindicado_por_alergia(ibuprofeno, desconocida).
+contraindicado_por_alergia(ibuprofeno, desconocida).
+contraindicado_por_alergia(ibuprofeno, desconocida).
+contraindicado_por_alergia(ibuprofeno, desconocida).
 contraindicado_por_cronico(ibuprofeno, hipertension_no_controlada).
 
-member(E, [E|_]).
-member(E, [_|T]) :- member(E, T).
-
-incluye([], _).
-incluye([H|T], L) :- member(H, L), incluye(T, L).
-
-afinidad(Enf, SintomasSeveridad, Afinidad, Reglas) :-
-    findall(W, (member((S, Sev), SintomasSeveridad),
-                caracteriza(Enf, S, Pw),
-                peso_severidad(Sev, Pv),
-                W is Pw * Pv), Pesos),
-    sum_list(Pesos, Suma),
-    findall(Pmax, caracteriza(Enf, _, Pmax), Pmaxs),
-    length(Pmaxs, N), (N =:= 0 -> Max is 1 ; Max is 3 * 3 * N),
-    Raw is Suma / Max,
-    Afinidad is round(Raw * 100),
-    findall(rule(caracteriza(Enf,S,Pw), severidad(S,Sev)),
-            (member((S,Sev), SintomasSeveridad), caracteriza(Enf,S,Pw)),
-            Reglas).
+% ==== Auxiliares de listas ====
+member(E,[E|_]).
+member(E,[_|T]):-member(E,T).
 
 sum_list([],0).
-sum_list([H|T],S):- sum_list(T,S1), S is H+S1.
+sum_list([H|T],S):-sum_list(T,S1),S is H+S1.
 
-medicamento_seguro(Enf, Alergias, Cronicos, Med) :-
-    trata(Med, Enferms), member(Enf, Enferms),
-    \+ (member(A, Alergias), contraindicado_por_alergia(Med, A)),
-    \+ (member(C, Cronicos), contraindicado_por_cronico(Med, C)).
+length([],0).
+length([_|T],N):-length(T,N1),N is N1+1.
 
-nivel_urgencia(Enf, SintomasSeveridad, Urg) :-
-    ( Enf = influenza, member((fiebre,severo), SintomasSeveridad) -> Urg = 'Consulta médica inmediata sugerida'
-    ; Enf = influenza, member((fiebre,moderado), SintomasSeveridad) -> Urg = 'Observación recomendada'
-    ; Enf = migraña, member((dolor_cabeza,severo), SintomasSeveridad) -> Urg = 'Observación recomendada'
-    ; Urg = 'Posible automanejo'
-    ).
+append([],L,L).
+append([H|T],L,[H|R]):-append(T,L,R).
 
-consulta(Sv, Alerg, Cron, ResOrdenado) :-
-    findall(Enf, enfermedad(Enf,_,_), Enferms),
-    findall(r(Enf,Afin,Med,Ur,Regs),
-        ( member(Enf, Enferms),
-          afinidad(Enf, Sv, Afin, Regs),
-          Afin > 0,
-          ( medicamento_seguro(Enf, Alerg, Cron, Med) -> true ; Med = ninguno ),
-          nivel_urgencia(Enf, Sv, Ur)
-        ), Res),
-    sort(2, @>=, Res, Ordenado),
-    maplist(r_a_dict, Ordenado, ResOrdenado).
+% ==== Afinidad ====
+afinidad(Enf,Sv,Afin,Regs):-
+  findall(W,(member((S,Sev),Sv),caracteriza(Enf,S,Pw),peso_severidad(Sev,Pv),W is Pw*Pv),Pesos),
+  sum_list(Pesos,Suma),
+  findall(Pmax,caracteriza(Enf,_,Pmax),Pmaxs),
+  length(Pmaxs,N),(N=:=0->Max is 1; Max is 9*N),
+  Raw is Suma/Max,
+  Afin is round(Raw*100),
+  findall(rule(caracteriza(Enf,S,Pw),severidad(S,Sev)),
+          (member((S,Sev),Sv),caracteriza(Enf,S,Pw)),Regs).
 
-r_a_dict(r(E,A,M,U,Regs), _{enfermedad:E, afinidad:A, medicamento:M, urgencia:U, reglas:Regs}).
+% ==== Medicamento seguro (sin negación \+) ====
+medicamento_seguro(Enf,Als,Crs,Med):-
+  trata(Med,Ens), member(Enf,Ens),
+  no_contra_alergias(Med, Als),
+  no_contra_cronicos(Med, Crs).
 
-consulta_item(Sv, Alerg, Cron, Enf, Afin, Med, Ur) :-
-    findall(r(EnfX,AfinX,MedX,UrX),
-        ( enfermedad(EnfX,_,_),
-          afinidad(EnfX, Sv, AfinX, _),
-          AfinX > 0,
-          ( medicamento_seguro(EnfX, Alerg, Cro_
+no_contra_alergias(_, []).
+no_contra_alergias(Med, [A|T]):- contraindicado_por_alergia(Med, A), !, fail.
+no_contra_alergias(Med, [_|T]):- no_contra_alergias(Med, T).
+
+no_contra_cronicos(_, []).
+no_contra_cronicos(Med, [C|T]):- contraindicado_por_cronico(Med, C), !, fail.
+no_contra_cronicos(Med, [_|T]):- no_contra_cronicos(Med, T).
+
+% ==== Urgencia ====
+nivel_urgencia(Enf,Sv,U):-
+  ( Enf=influenza, member((fiebre,severo),Sv) -> U='Consulta médica inmediata sugerida'
+  ; Enf=influenza, member((fiebre,moderado),Sv) -> U='Observación recomendada'
+  ; Enf=migrana, member((dolor_cabeza,severo),Sv) -> U='Observación recomendada'
+  ; U='Posible automanejo'
+  ).
+
+% ==== Consulta principal y ordenamiento ====
+consulta(Sv,Als,Crs,Ordenado):-
+  findall(res(Enf,A,Med,U),
+    ( enfermedad(Enf,_,_),
+      afinidad(Enf,Sv,A,_),
+      A>0,
+      (medicamento_seguro(Enf,Als,Crs,Med)->true;Med=ninguno),
+      nivel_urgencia(Enf,Sv,U)
+    ),Res),
+  ordenar_por_afinidad(Res,Ordenado).
+
+consulta_item(Sv,Als,Crs,Enf,A,Med,U):-
+  consulta(Sv,Als,Crs,Ord),
+  member(res(Enf,A,Med,U),Ord).
+
+ordenar_por_afinidad([],[]).
+ordenar_por_afinidad([H|T],S):-
+  particionar_por_afinidad(H,T,May,Men),
+  ordenar_por_afinidad(May,Sm),
+  ordenar_por_afinidad(Men,Sn),
+  append(Sm,[H|Sn],S).
+
+afin_de(res(_,A,_,_),A).
+particionar_por_afinidad(_,[],[],[]).
+particionar_por_afinidad(P,[X|Xs],[X|May],Men):-afin_de(X,Ax),afin_de(P,Ap),Ax>=Ap,!,particionar_por_afinidad(P,Xs,May,Men).
+particionar_por_afinidad(P,[X|Xs],May,[X|Men]):-particionar_por_afinidad(P,Xs,May,Men).

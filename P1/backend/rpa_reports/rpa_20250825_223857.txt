@@ -1,0 +1,8 @@
+MediLogic RPA – Informe de carga
+Fecha: 2025-08-25 22:38:57
+
+- Enfermedad: sinusitis (tipo=bacteriano, sistema=respiratorio)
+  Síntomas: dolor_cabeza:2, fatiga:1, fiebre:2
+  Trata: amoxicilina, paracetamol
+  Contraindicados: ibuprofeno
+
